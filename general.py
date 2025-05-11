@@ -78,6 +78,3 @@ def obtener_productos_general(nombre_producto, sitio):
     browser.quit()
     return json.dumps(productos_resultado, ensure_ascii=False, indent=4)
 
-print(obtener_productos_general("pan", "unimarc"))
-print(obtener_productos_general("pan", "santa_isabel"))
-
