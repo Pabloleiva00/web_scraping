@@ -8,6 +8,7 @@ import time
 import re
 import json
 
+# sitio puede ser "unimarc" o "santa isabel" por ahora
 def obtener_productos(nombre_producto, sitio):
     chrome_options = Options()
     chrome_options.add_argument("--disable-gpu")
