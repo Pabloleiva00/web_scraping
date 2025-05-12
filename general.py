@@ -8,7 +8,7 @@ import time
 import re
 import json
 
-def obtener_productos_general(nombre_producto, sitio):
+def obtener_productos(nombre_producto, sitio):
     chrome_options = Options()
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
@@ -74,7 +74,5 @@ def obtener_productos_general(nombre_producto, sitio):
     except Exception as e:
         print(f"Error: {e}")
 
-    time.sleep(2)
     browser.quit()
     return json.dumps(productos_resultado, ensure_ascii=False, indent=4)
-
