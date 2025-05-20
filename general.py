@@ -8,6 +8,15 @@ import time
 import re
 import json
 
+def filtrar_links_productos(elementos_a):
+    hrefs = []
+    for a in elementos_a:
+        href = a.get_attribute("href")
+        if href and "/product" in href and href not in hrefs:
+            hrefs.append(href)
+    return hrefs
+
+
 # sitio puede ser "unimarc" o "santa isabel" por ahora
 def obtener_productos(nombre_producto, sitio):
     chrome_options = Options()
@@ -24,7 +33,10 @@ def obtener_productos(nombre_producto, sitio):
             "paginador": "Text_text--black__zYYxI",
             "producto_nombre": "Shelf_nameProduct__CXI5M",
             "producto_precio": "Text_text--primary__OoK0C",
-            "producto_imagen": "Shelf_defaultImgStyle__ylyx2"
+            "producto_imagen": "Shelf_defaultImgStyle__ylyx2",
+            "producto_link": "a.Link_link___5dmQ[role='link']"
+
+
         }
     elif sitio == "santa_isabel":
         base_url = f"https://www.santaisabel.cl/busqueda?ft={nombre_producto}"
@@ -33,7 +45,8 @@ def obtener_productos(nombre_producto, sitio):
             "paginador": "page-number",
             "producto_nombre": "product-card-name",
             "producto_precio": "prices-main-price",
-            "producto_imagen": "lazy-image"
+            "producto_imagen": "lazy-image",
+            "producto_link": "product-card"
         }
     else:
         raise ValueError("Sitio no soportado")
@@ -57,18 +70,28 @@ def obtener_productos(nombre_producto, sitio):
             nombres = browser.find_elements(By.CLASS_NAME, selectores["producto_nombre"])
             precios = browser.find_elements(By.CLASS_NAME, selectores["producto_precio"])
             imagenes = browser.find_elements(By.CLASS_NAME, selectores["producto_imagen"])
+            if sitio == "santa_isabel":
+                links = browser.find_elements(By.CLASS_NAME, selectores["producto_link"])
+            else:
+                links = browser.find_elements(By.CSS_SELECTOR, selectores["producto_link"])
+                hrefs_validos = filtrar_links_productos(links)
 
             for i in range(min(len(nombres), len(precios), len(imagenes))):
                 try:
                     nombre = nombres[i].text.strip()
-                    if nombre_producto.lower() in nombre.lower():
-                        precio = precios[i].text.strip()
-                        imagen = imagenes[i].get_attribute("src").strip()
-                        productos_resultado.append({
-                            "nombre": nombre,
-                            "precio": precio,
-                            "imagen": imagen
-                        })
+                    precio = precios[i].text.strip()
+                    imagen = imagenes[i].get_attribute("src").strip()
+                    if sitio == "santa_isabel":
+                        link = links[i].get_attribute("href").strip()
+                    elif sitio == "unimarc":
+                        link = hrefs_validos[i] #recuerda cambiar santa isabel
+
+                    productos_resultado.append({
+                        "nombre": nombre,
+                        "precio": precio,
+                        "imagen": imagen,
+                        "link": link
+                    })
                 except StaleElementReferenceException:
                     print("Elemento actualizado, se omitió uno")
 
@@ -77,3 +100,5 @@ def obtener_productos(nombre_producto, sitio):
 
     browser.quit()
     return json.dumps(productos_resultado, ensure_ascii=False, indent=4)
+
+print(obtener_productos("Arroz", "santa_isabel"))
